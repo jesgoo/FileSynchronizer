@@ -94,6 +94,8 @@ class DirectoryMonitorApplication(jesgoo.application.Application):
         return parser.parse_args()
 
     def main(self, args):
+        for server_group in self.config.server_groups:
+            ServerGroup.group(server_group.name).extend(server_group.servers)
         for directory_monitor_config in self.config.directory_monitor.directories:
             directory_monitor = DirectoryMonitor(**directory_monitor_config.as_config_dict)
             self._observer.schedule(directory_monitor, directory_monitor_config.path)
