@@ -3,7 +3,6 @@ __author__ = 'yangchenxing'
 
 import argparse
 import hashlib
-import itertools
 import os
 import sys
 
@@ -16,9 +15,9 @@ def parse_args():
 
 def update_md5(file):
     if os.path.isdir(file):
-        dirpath, dirnames, filenames = os.walk(file)
-        for filename in itertools.chain(filenames, dirnames):
-            update_md5(os.path.join(dirpath, filename))
+        for dirpath, _, filenames in os.walk(file):
+            for filename in filenames:
+                update_md5(os.path.join(dirpath, filename))
     else:
         with open(file, 'rb') as f:
             md5 = hashlib.md5()

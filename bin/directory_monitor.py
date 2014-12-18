@@ -5,7 +5,6 @@ import collections
 import os
 import sys
 
-import gevent.event
 import gevent.monkey
 import gevent.subprocess
 import watchdog.events
@@ -13,6 +12,8 @@ import watchdog.observers
 
 import jesgoo.application
 import jesgoo.supervisorutil.log as log
+
+gevent.monkey.patch_all()
 
 
 class ServerGroup(object):
@@ -37,8 +38,12 @@ class DirectoryMonitor(watchdog.events.FileSystemEventHandler):
         self._files_synchronizing_timeout = file_synchorinzing_timeout
         self._directory_synchronizing_timeout = directory_synchronizing_timeout
 
+    def on_any_event(self, event):
+        print 'on_any_event', event
+
     def on_created(self, event):
-        if event.is_directory and event.src_path.endswith('.md5'):
+        print 'on_created', event
+        if event.is_file and event.src_path.endswith('.md5'):
             self.synchronize(event.src_path)
 
     def synchronize(self, path=None):
@@ -66,6 +71,9 @@ class DirectoryMonitor(watchdog.events.FileSystemEventHandler):
             elif return_code != 0:
                 log.error('同步文件失败: local_path=%s, server=%s, remote_path=%s, return_code=%d',
                           config.local_path, server, config.remote_path, return_code)
+            else:
+                log.info('同步文件成功: local_path=%s, server=%s, remote_path=%s, return_code=%d',
+                         config.local_path, server, config.remote_path, return_code)
 
     def synchronize_directory(self, config):
         if self._directory_synchronizing_configs is None:
@@ -80,8 +88,11 @@ class DirectoryMonitor(watchdog.events.FileSystemEventHandler):
                           config.local_path, server, config.remote_path, self._directory_synchronizing_timeout)
                 process.kill()
             elif return_code != 0:
-                log.error('同步文件夹是白: local_path=%s, server=%s, remote_path=%s, return_code=%d',
+                log.error('同步文件夹失败: local_path=%s, server=%s, remote_path=%s, return_code=%d',
                           config.local_path, server, config.remote_path, return_code)
+            else:
+                log.info('同步文件夹成功: local_path=%s, server=%s, remote_path=%s, return_code=%d',
+                         config.local_path, server, config.remote_path, return_code)
 
 
 class DirectoryMonitorApplication(jesgoo.application.Application):
@@ -95,15 +106,16 @@ class DirectoryMonitorApplication(jesgoo.application.Application):
 
     def main(self, args):
         super(DirectoryMonitorApplication, self).main(args)
-        for server_group in self.config.server_groups:
+        for server_group in self.config.directory_monitor.server_groups:
             ServerGroup.group(server_group.name).extend(server_group.servers)
         for directory_monitor_config in self.config.directory_monitor.directories:
             directory_monitor = DirectoryMonitor(**directory_monitor_config.as_config_dict)
+            print 'schedule', directory_monitor, directory_monitor_config.path
             self._observer.schedule(directory_monitor, directory_monitor_config.path)
         self._observer.start()
+        self._observer.join()
 
 
 if __name__ == '__main__':
     application = DirectoryMonitorApplication()
     application.run()
-    gevent.event.Event().wait()
