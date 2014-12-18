@@ -55,7 +55,7 @@ class DirectoryMonitor(watchdog.events.FileSystemEventHandler):
 
     def synchronize_file(self, config):
         for server, process in [(server, gevent.subprocess.Popen(['scp',
-                                                                  config.local_path,
+                                                                  self._path,
                                                                   '%s%s' % (server, config.remote_path)]))
                                 for server in ServerGroup.group(config.server_group)]:
             return_code = process.wait(self._files_synchronizing_timeout)
@@ -91,7 +91,6 @@ class DirectoryMonitorApplication(jesgoo.application.Application):
 
     def parse_args(self):
         parser = self._create_default_argument_parser('捷酷目录同步工具')
-
         return parser.parse_args()
 
     def main(self, args):
