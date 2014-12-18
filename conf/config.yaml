@@ -1,6 +1,19 @@
 directory_monitor:
+  server_groups:
+    - name: jesgoo.entrance
+      servers:
+        - jesgoo01
+    - name: localhost
+      servers:
+        - localhost
+        - 127.0.0.1
+        - jesgoo01
+
   directories:
-    -
+    - path: test
+      directory_synchronizing:
+        - server_group: jesgoo.entrance
+          remote_path: test2
 
 logging:
   enable_debug: true
