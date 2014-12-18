@@ -1,0 +1,75 @@
+directory_monitor:
+  directories:
+    -
+
+logging:
+  enable_debug: true
+  version: 1
+  formatters:
+    default:
+      format: "%(levelname)s [%(asctime)s][%(filename)s:%(lineno)d][%(module)s:%(funcName)s][%(name)s] %(message)s"
+    notice:
+      format: "%(asctime)s %(message)s"
+      datefmt: "%Y-%m-%d %H:%M:%S"
+  handlers:
+    console:
+      class: logging.StreamHandler
+      formatter: default
+      level: DEBUG
+    debug:
+      class: logging.handlers.TimedRotatingFileHandler
+      level: DEBUG
+      formatter: default
+      filename: logs/debug.log
+      when: D
+      interval: 1
+      backupCount: 3
+    info:
+      class: logging.handlers.TimedRotatingFileHandler
+      level: INFO
+      formatter: default
+      filename: logs/info.log
+      when: D
+      interval: 1
+      backupCount: 3
+    warn:
+      class: logging.handlers.TimedRotatingFileHandler
+      level: WARN
+      formatter: default
+      filename: logs/warn.log
+      when: D
+      interval: 1
+      backupCount: 3
+    error:
+      class: logging.handlers.TimedRotatingFileHandler
+      level: ERROR
+      formatter: default
+      filename: logs/error.log
+      when: D
+      interval: 1
+      backupCount: 3
+  loggers:
+    debug:
+      level: DEBUG
+      propagate: False
+      handlers:
+        - debug
+    info:
+      level: INFO
+      propagate: False
+      handlers:
+        - info
+    warn:
+      level: WARN
+      propagate: False
+      handlers:
+        - warn
+    error:
+      level: ERROR
+      propagate: False
+      handlers:
+        - error
+  root:
+    level: DEBUG
+    handlers:
+      - console
