@@ -87,7 +87,7 @@ class DirectoryMonitor(watchdog.events.FileSystemEventHandler):
         log.debug('同步目录: %s', self._path)
         for server in ServerGroup.group(config.server_group):
             print ['rsync', self._path, '%s:%s' % (server, config.remote_path)]
-        processes = [(server, subprocess.Popen(['rsync',
+        processes = [(server, subprocess.Popen(['rsync', '-r',
                                                 self._path,
                                                 '%s:%s' % (server, config.remote_path)]))
                      for server in ServerGroup.group(config.server_group)]
@@ -131,10 +131,15 @@ class DirectoryMonitorApplication(jesgoo.application.Application):
         for directory_monitor_config in self.config.directory_monitor.directories:
             directory_monitor = DirectoryMonitor(**directory_monitor_config.as_config_dict)
             path = os.path.abspath(directory_monitor_config.path)
-            print 'schedule', directory_monitor, path
             self._observer.schedule(directory_monitor, path)
-            #self._observer.schedule(watchdog.events.LoggingEventHandler(), path, True)
         self._observer.start()
+        try:
+            while 1:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            self._observer.stop()
+        except SystemExit:
+            self._observer.stop()
         self._observer.join()
 
 
