@@ -49,14 +49,15 @@ class DirectoryMonitor(watchdog.events.FileSystemEventHandler):
         else:
             log.info('全部同步')
             for file_synchronizing_config in self._files_synchronizing_configs:
-                self.synchronize_file(path, file_synchronizing_config.remote_path,
+                self.synchronize_file(os.path.join(self._path, file_synchronizing_config.path),
+                                      file_synchronizing_config.remote_path,
                                       file_synchronizing_config.server_group)
             for directory_synchronizing_config in self._directory_synchronizing_configs:
                 self.synchronize_file(self._path, directory_synchronizing_config.remote_path,
                                       directory_synchronizing_config.server_group)
 
     def synchronize_file(self, local_path, remote_path, server_group):
-        log.debug('同步单文件: %s', local_path)
+        log.debug('同步文件: %s', local_path)
         processes = [(server, subprocess.Popen(['rsync', '-r', '-T', '/tmp',
                                                 local_path, '%s:%s' % (server, remote_path)]))
                      for server in server_groups[server_group]]
