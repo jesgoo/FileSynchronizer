@@ -17,11 +17,11 @@ server_groups = collections.defaultdict(list)
 
 class DirectoryMonitor(watchdog.events.FileSystemEventHandler):
     def __init__(self, path, files_synchronizing=None, directory_synchronizing=None,
-                 file_synchorinzing_timeout=5, directory_synchronizing_timeout=60):
+                 file_synchronizing_timeout=5, directory_synchronizing_timeout=60):
         self._path = os.path.abspath(path)
         self._files_synchronizing_configs = files_synchronizing if files_synchronizing else []
         self._directory_synchronizing_configs = directory_synchronizing if directory_synchronizing else []
-        self._files_synchronizing_timeout = file_synchorinzing_timeout
+        self._files_synchronizing_timeout = file_synchronizing_timeout
         self._directory_synchronizing_timeout = directory_synchronizing_timeout
 
     def on_created(self, event):
@@ -39,7 +39,7 @@ class DirectoryMonitor(watchdog.events.FileSystemEventHandler):
             if os.path.exists(path):
                 log.debug('文件存在，开始同步')
                 for file_synchronizing_config in self._files_synchronizing_configs:
-                    if file_synchronizing_config.path == path:
+                    if os.path.join(self._path, file_synchronizing_config.path) == path:
                         self.synchronize_file(path, file_synchronizing_config.remote_path,
                                               file_synchronizing_config.server_group)
                 for directory_synchronizing_config in self._directory_synchronizing_configs:
