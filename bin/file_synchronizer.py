@@ -8,8 +8,9 @@ import time
 import watchdog.events
 import watchdog.observers
 
-import jesgoo.application
-import jesgoo.supervisorutil.log as log
+import jesgoo2.application
+
+log = jesgoo2.application.log
 
 
 server_groups = collections.defaultdict(list)
@@ -85,21 +86,17 @@ class DirectoryMonitor(watchdog.events.FileSystemEventHandler):
             process.kill()
 
 
-class DirectoryMonitorApplication(jesgoo.application.Application):
+class DirectoryMonitorApplication(jesgoo2.application.StandaloneApplication):
     def __init__(self, *args, **kwargs):
-        super(DirectoryMonitorApplication, self).__init__('..', *args, **kwargs)
+        super(DirectoryMonitorApplication, self).__init__(*args, **kwargs)
         self._observer = watchdog.observers.Observer()
 
-    def parse_args(self):
-        parser = self._create_default_argument_parser('捷酷目录同步工具')
-        return parser.parse_args()
-
-    def main(self, args):
-        super(DirectoryMonitorApplication, self).main(args)
+    def main(self):
+        super(DirectoryMonitorApplication, self).main()
         for server_group in self.config.directory_monitor.server_groups:
             server_groups[server_group.name].extend(server_group.servers)
         for directory_monitor_config in self.config.directory_monitor.directories:
-            directory_monitor = DirectoryMonitor(**directory_monitor_config.as_config_dict)
+            directory_monitor = DirectoryMonitor(**directory_monitor_config.as_namespace_dict)
             path = os.path.abspath(directory_monitor_config.path)
             self._observer.schedule(directory_monitor, path)
             directory_monitor.synchronize()

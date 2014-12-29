@@ -17,7 +17,7 @@ app_config = {
     'workdir': working_directory,
     'programs': [
         {
-            'command': 'python bin/directory_monitor.py start',
+            'command': 'python bin/file_synchronizer.py',
             'process_name': 'directory_monitor',
             'autorestart': True,
             'stderr_logfile': 'None',
