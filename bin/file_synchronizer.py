@@ -16,7 +16,7 @@ log = jesgoo2.application.log
 server_groups = collections.defaultdict(list)
 
 
-class DirectoryMonitor(watchdog.events.FileSystemEventHandler):
+class FileSynchronizerHandler(watchdog.events.FileSystemEventHandler):
     def __init__(self, path, files_synchronizing=None, directory_synchronizing=None,
                  file_synchronizing_timeout=5, directory_synchronizing_timeout=60):
         self._path = os.path.abspath(path)
@@ -34,6 +34,7 @@ class DirectoryMonitor(watchdog.events.FileSystemEventHandler):
             self.synchronize(event.src_path)
 
     def synchronize(self, path=None):
+        log.info('同步: handler.path=%s, argument.path=%s', self._path, path)
         if path:
             path = os.path.abspath(path)
             log.info('同步文件: %s', path)
@@ -86,20 +87,20 @@ class DirectoryMonitor(watchdog.events.FileSystemEventHandler):
             process.kill()
 
 
-class DirectoryMonitorApplication(jesgoo2.application.StandaloneApplication):
+class FileSynchronizer(jesgoo2.application.StandaloneApplication):
     def __init__(self, *args, **kwargs):
-        super(DirectoryMonitorApplication, self).__init__(*args, **kwargs)
+        super(FileSynchronizer, self).__init__(*args, **kwargs)
         self._observer = watchdog.observers.Observer()
 
     def main(self):
-        super(DirectoryMonitorApplication, self).main()
-        for server_group in self.config.directory_monitor.server_groups:
+        super(FileSynchronizer, self).main()
+        for server_group in self.config.file_synchronizer.server_groups:
             server_groups[server_group.name].extend(server_group.servers)
-        for directory_monitor_config in self.config.directory_monitor.directories:
-            directory_monitor = DirectoryMonitor(**directory_monitor_config.as_namespace_dict)
-            path = os.path.abspath(directory_monitor_config.path)
-            self._observer.schedule(directory_monitor, path)
-            directory_monitor.synchronize()
+        for file_synchronizer_config in self.config.file_synchronizer.directories:
+            file_synchronizer = FileSynchronizerHandler(**file_synchronizer_config.as_namespace_dict)
+            path = os.path.abspath(file_synchronizer_config.path)
+            self._observer.schedule(file_synchronizer, path)
+            file_synchronizer.synchronize()
         self._observer.start()
         try:
             while 1:
@@ -112,5 +113,5 @@ class DirectoryMonitorApplication(jesgoo2.application.StandaloneApplication):
 
 
 if __name__ == '__main__':
-    application = DirectoryMonitorApplication()
+    application = FileSynchronizer()
     application.run()

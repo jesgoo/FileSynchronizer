@@ -1,4 +1,4 @@
-directory_monitor:
+file_synchronizer:
   server_groups:
     - name: jesgoo.entrance
       servers:
